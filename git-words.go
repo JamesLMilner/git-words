@@ -15,7 +15,8 @@ import (
 
 func main() {
 
-	min := flag.Int("min", 1, "Branch to use")
+	min := flag.Int("min", 1, "minimum number of occurances before printing out")
+	caseInsensitive := flag.Bool("case", false, "whether to be case insensitive or not")
 	flag.Parse()
 
 	wordcount := make(map[string]int)
@@ -56,7 +57,13 @@ func main() {
 		msg = replacer.Replace(msg)
 		words := strings.Fields(msg)
 		for _, word := range words {
-			wordcount[word]++
+			if *caseInsensitive {
+				word = strings.ToLower(word)
+				wordcount[word]++
+			} else {
+				wordcount[word]++
+			}
+
 		}
 
 		parent = parent.Parent(0)
