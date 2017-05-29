@@ -15,7 +15,7 @@ import (
 
 func main() {
 
-	min := flag.Int("min", 1, "minimum number of occurances before printing out")
+	min := flag.Int("min", 2, "minimum number of occurances before printing out")
 	caseInsensitive := flag.Bool("case", false, "whether to be case insensitive or not")
 	flag.Parse()
 
