@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"path/filepath"
@@ -14,6 +15,9 @@ import (
 
 func main() {
 
+	min := flag.Int("min", 1, "Branch to use")
+	flag.Parse()
+
 	wordcount := make(map[string]int)
 
 	wd, err := os.Getwd()
@@ -22,6 +26,7 @@ func main() {
 	}
 
 	repository, err := gogit.OpenRepository(filepath.Join(wd, ".git"))
+	// TODO: should loop through all parent dirs to check for .geit file
 	if err != nil {
 		log.Fatal("fatal: Not a git repository .git")
 	}
@@ -33,32 +38,31 @@ func main() {
 
 	ci, err := repository.LookupCommit(ref.Oid)
 	parent := ci.Parent(0)
+	msg := parent.CommitMessage
 
 	for parent != nil {
 
-		msg := parent.CommitMessage
-		//fmt.Println(msg)
-		ci, err := repository.LookupCommit(parent.Oid)
-		if err != nil {
-			//fmt.Print(ci.CommitMessage)
-		}
-		parent = ci.Parent(0)
-
 		// Word processing
-
 		replacer := strings.NewReplacer(",", "", ".", "", ";", "", "!", "", ":", "", "-", "")
 		msg = replacer.Replace(msg)
 		words := strings.Fields(msg)
 		for _, word := range words {
 			wordcount[word]++
-			//fmt.Println(i, " => ", word)
+		}
+
+		ci, err := repository.LookupCommit(parent.Oid)
+		if err != nil {
+			parent = ci.Parent(1)
+			msg = parent.CommitMessage
+		} else {
+			break
 		}
 
 	}
 
 	pl := rankByWordCount(wordcount)
 	for _, v := range pl {
-		if v.Value > 1 {
+		if v.Value > *min {
 			fmt.Println(v.Key, v.Value)
 		}
 	}
