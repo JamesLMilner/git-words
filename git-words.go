@@ -23,7 +23,7 @@ func main() {
 
 	repository, err := gogit.OpenRepository(filepath.Join(wd, ".git"))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("fatal: Not a git repository .git")
 	}
 
 	ref, err := repository.LookupReference("HEAD")
