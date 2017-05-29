@@ -36,37 +36,49 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ci, err := repository.LookupCommit(ref.Oid)
-	parent := ci.Parent(0)
-	msg := parent.CommitMessage
+	parent, err := repository.LookupCommit(ref.Oid)
 
 	for parent != nil {
 
 		// Word processing
-		replacer := strings.NewReplacer(",", "", ".", "", ";", "", "!", "", ":", "", "-", "")
+		msg := parent.CommitMessage
+
+		// Puncation we want to ignore (we could allow users to specify others)
+		replacer := strings.NewReplacer(
+			",", "",
+			".", "",
+			";", "",
+			"!", "",
+			":", "",
+			"-", "",
+			"*", "",
+		)
 		msg = replacer.Replace(msg)
 		words := strings.Fields(msg)
 		for _, word := range words {
 			wordcount[word]++
 		}
 
-		ci, err := repository.LookupCommit(parent.Oid)
-		if err != nil {
-			parent = ci.Parent(1)
-			msg = parent.CommitMessage
-		} else {
-			break
+		parent = parent.Parent(0)
+		if parent != nil {
+			parent, err = repository.LookupCommit(parent.Oid)
+			if err != nil {
+				break
+			}
 		}
 
 	}
 
+	printTotals(wordcount, min)
+}
+
+func printTotals(wordcount map[string]int, min *int) {
 	pl := rankByWordCount(wordcount)
 	for _, v := range pl {
-		if v.Value > *min {
+		if v.Value >= *min {
 			fmt.Println(v.Key, v.Value)
 		}
 	}
-
 }
 
 func rankByWordCount(wordFrequencies map[string]int) PairList {
